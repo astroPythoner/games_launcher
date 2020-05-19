@@ -20,10 +20,10 @@ class Game:
     name = "Unnamed"
     description = ""
     type = "Game"
+    author = "unknown"
     players = "unknown"
     playable_with = ["unknown"]
     title_image = None
-    trailer = None
     readme = {}
     folder = None
 
@@ -36,12 +36,11 @@ class Game:
                     if "name" in data: self.name = data["name"]
                     if "description" in data: self.description = data["description"]
                     if "type" in data: self.type = data["type"]
+                    if "author" in data: self.author = data["author"]
                     if "players" in data: self.players = data["players"]
                     if "playable with" in data: self.playable_with = data["playable with"]
             if os.path.isfile(os.path.join(game_path, "title_image.png")):
                 self.title_image = pygame.image.load(os.path.join(game_path, "title_image.png"))
-            if os.path.isfile(os.path.join(game_path, "trailer.MPG")):
-                self.trailer = pygame.movie.Movie(os.path.join(game_path, "trailer.MPG"))
             self._read_readme(os.path.join(game_path, "README.md"))
 
     def _read_readme(self,path):
@@ -87,10 +86,13 @@ class Information_Game(Game):
         self.name = "Information"
         self.description = "Wie benutze ich die Spiele und wie erstelle ich Eigene"
         self.type = "Erklärung"
+        self.author = "AstroPythoner"
         self.players = "beliebig viele beim Testen"
-        self.playable_with = ["Kontroller"]
+        self.playable_with = ["Controller","Tastatur als Controller"]
         self._read_readme("README.md")
-        self.folder = "rsh"
+        self.folder = os.path.join(game_folder_path,"joystickpins")
+        if os.path.isfile(os.path.join(self.folder, "tastaturbelegung.png")):
+            self.title_image = pygame.image.load(os.path.join(self.folder, "tastaturbelegung.png"))
 
 def calculate_fit_size(width,height,max_width_faktor, max_height_faktor):
     # caltulate size so it fits to WIDTH and HEIGHT
@@ -175,10 +177,11 @@ def draw_readme(surf,text,width,x,y,size1=None,size2=None,size3=None,normal_size
 def draw_game_info_on_surface(surface,game,y_scroll):
     y = y_scroll
     # infos aus info.json datei, die in der Game Klasse gespeichert sind
-    y = draw_text_fitting_line_width(surface, game.name,                                        surface.get_width() - 20, 10, y, text_groessen[0], color=(250, 250, 250)) + text_groessen[0] / 2
-    y = draw_text_fitting_line_width(surface, game.description,                                 surface.get_width() - 20, 10, y, text_groessen[1], color=(200, 200, 200)) + text_groessen[0]
-    y = draw_text_fitting_line_width(surface, "Typ: " + game.type,                              surface.get_width() - 20, 10, y, text_groessen[1], color=(200, 200, 200)) + text_groessen[0] / 4
-    y = draw_text_fitting_line_width(surface, "Spieler: " + game.players.replace("to", "bis"),  surface.get_width() - 20, 10, y, text_groessen[1], color=(200, 200, 200)) + text_groessen[0] / 4
+    y = draw_text_fitting_line_width(surface, game.name,                                       surface.get_width() - 20, 10, y, text_groessen[0], color=(250, 250, 250)) + text_groessen[0] / 2
+    y = draw_text_fitting_line_width(surface, game.description,                                surface.get_width() - 20, 10, y, text_groessen[1], color=(200, 200, 200)) + text_groessen[0]
+    y = draw_text_fitting_line_width(surface, "Entwickler: " + game.author,                    surface.get_width() - 20, 10, y, text_groessen[1], color=(200, 200, 200)) + text_groessen[0] / 4
+    y = draw_text_fitting_line_width(surface, "Typ: " + game.type,                             surface.get_width() - 20, 10, y, text_groessen[1], color=(200, 200, 200)) + text_groessen[0] / 4
+    y = draw_text_fitting_line_width(surface, "Spieler: " + game.players.replace("to", "bis"), surface.get_width() - 20, 10, y, text_groessen[1], color=(200, 200, 200)) + text_groessen[0] / 4
     y = draw_text_fitting_line_width(surface, "Spielen mit: " + ", ".join(game.playable_with), surface.get_width() - 20, 10, y, text_groessen[1], color=(200, 200, 200)) + text_groessen[0] / 4
     # Linie
     pygame.draw.line(surface, (200, 200, 200), (0, y+5), (surface.get_width(), y+5))
@@ -197,8 +200,13 @@ def find_games(game_folder_path):
     games.append(Information_Game())
     return games
 def start_game(game_path):
-    if os.path.isfile(os.path.join(game_path, "main.py")):
+    if game_path == os.path.join(game_folder_path,"joystickpins"):
+        if os.path.isfile(os.path.join(game_path, "event_test.py")):
+            print("joysticktesten:", "from " + os.path.basename(game_path) + " import event-test")
+            exec("from " + os.path.basename(game_path) + " import event_test")
+    elif os.path.isfile(os.path.join(game_path, "main.py")):
         sys.path.insert(1, game_path)
+        print("running:","from " + os.path.basename(game_path) + " import main")
         exec("from " + os.path.basename(game_path) + " import main")
 
 def draw_side_view(screen,width,height,height_anzeige_auswahl,games,selected_game, y_scroll):
@@ -284,7 +292,6 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
     pygame.display.set_caption("Games with python and pygame")
     screen.fill((60,60,60))
-    clock = pygame.time.Clock()
 
     all_joysticks = []
     for joy in range(pygame.joystick.get_count()):
@@ -294,11 +301,8 @@ if __name__ == '__main__':
         print("adding joystick " + my_joystick.get_name())
         all_joysticks.append(my_joystick)
 
-    print(games[1].name)
-
-    while True:
+    while pygame.get_init():
         # draw
-        clock.tick()
         screen.fill(background_color)
         height_anzeige_auswahl = height/20
         max_y_scroll = height
@@ -349,6 +353,9 @@ if __name__ == '__main__':
             # starten
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 pygame.quit()
+                #pygame.display.quit()
+                #pygame.joystick.quit()
+                print("starting",games[selected_game].name)
                 start_game(games[selected_game].folder)
             # window resize
             if event.type == pygame.VIDEORESIZE:
