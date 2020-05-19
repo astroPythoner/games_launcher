@@ -27,23 +27,27 @@ class Game:
     readme = {}
     folder = None
 
-    def __init__(self,game_path):
-        self.folder = game_path
-        if os.path.isfile(os.path.join(game_path, "info.json")):
-            with open(os.path.join(game_path, "info.json")) as f:
-                data = json.load(f)
-                if "name" in data: self.name = data["name"]
-                if "description" in data: self.description = data["description"]
-                if "type" in data: self.type = data["type"]
-                if "players" in data: self.players = data["players"]
-                if "playable with" in data: self.playable_with = data["playable with"]
-        if os.path.isfile(os.path.join(game_path, "title_image.png")):
-            self.title_image = pygame.image.load(os.path.join(game_path, "title_image.png"))
-        if os.path.isfile(os.path.join(game_path, "trailer.MPG")):
-            self.trailer = pygame.movie.Movie(os.path.join(game_path, "trailer.MPG"))
-        if os.path.isfile(os.path.join(game_path, "README.md")):
+    def __init__(self,game_path=None):
+        if game_path != None:
+            self.folder = game_path
+            if os.path.isfile(os.path.join(game_path, "info.json")):
+                with open(os.path.join(game_path, "info.json")) as f:
+                    data = json.load(f)
+                    if "name" in data: self.name = data["name"]
+                    if "description" in data: self.description = data["description"]
+                    if "type" in data: self.type = data["type"]
+                    if "players" in data: self.players = data["players"]
+                    if "playable with" in data: self.playable_with = data["playable with"]
+            if os.path.isfile(os.path.join(game_path, "title_image.png")):
+                self.title_image = pygame.image.load(os.path.join(game_path, "title_image.png"))
+            if os.path.isfile(os.path.join(game_path, "trailer.MPG")):
+                self.trailer = pygame.movie.Movie(os.path.join(game_path, "trailer.MPG"))
+            self._read_readme(os.path.join(game_path, "README.md"))
+
+    def _read_readme(self,path):
+        if os.path.isfile(path):
             self.readme = {}
-            with open(os.path.join(game_path, "README.md"),"r") as file:
+            with open(path, "r") as file:
                 for line in file:
                     line = line.rstrip()
                     ueberschrift_num = 0
@@ -76,7 +80,17 @@ class Game:
                 file.close()
 
     def __str__(self):
-        return self.name+"\n"+self.description+"\n"+self.type+"\n"+self.players+"\n"+str(self.playable_with)+"\n"+self.folder+"\n"+str(self.readme)
+        return str(self.name+"\n"+self.description+"\n"+self.type+"\n"+self.players+"\n"+str(self.playable_with)+"\n"+self.folder+"\n"+str(self.readme))
+class Information_Game(Game):
+    def __init__(self):
+        super(Information_Game, self).__init__()
+        self.name = "Information"
+        self.description = "Wie benutze ich die Spiele und wie erstelle ich Eigene"
+        self.type = "Erklärung"
+        self.players = "beliebig viele beim Testen"
+        self.playable_with = ["Kontroller"]
+        self._read_readme("README.md")
+        self.folder = "rsh"
 
 def calculate_fit_size(width,height,max_width_faktor, max_height_faktor):
     # caltulate size so it fits to WIDTH and HEIGHT
@@ -165,7 +179,7 @@ def draw_game_info_on_surface(surface,game,y_scroll):
     y = draw_text_fitting_line_width(surface, game.description,                                 surface.get_width() - 20, 10, y, text_groessen[1], color=(200, 200, 200)) + text_groessen[0]
     y = draw_text_fitting_line_width(surface, "Typ: " + game.type,                              surface.get_width() - 20, 10, y, text_groessen[1], color=(200, 200, 200)) + text_groessen[0] / 4
     y = draw_text_fitting_line_width(surface, "Spieler: " + game.players.replace("to", "bis"),  surface.get_width() - 20, 10, y, text_groessen[1], color=(200, 200, 200)) + text_groessen[0] / 4
-    y = draw_text_fitting_line_width(surface, "Spielen mit: " +  ", ".join(game.playable_with), surface.get_width() - 20, 10, y, text_groessen[1], color=(200, 200, 200)) + text_groessen[0] / 4
+    y = draw_text_fitting_line_width(surface, "Spielen mit: " + ", ".join(game.playable_with), surface.get_width() - 20, 10, y, text_groessen[1], color=(200, 200, 200)) + text_groessen[0] / 4
     # Linie
     pygame.draw.line(surface, (200, 200, 200), (0, y+5), (surface.get_width(), y+5))
     y += 10 + text_groessen[1]
@@ -180,6 +194,7 @@ def find_games(game_folder_path):
         game_path = os.path.join(game_folder_path, folder)
         if os.path.isfile(os.path.join(game_path, "main.py")):
             games.append(Game(game_path))
+    games.append(Information_Game())
     return games
 def start_game(game_path):
     if os.path.isfile(os.path.join(game_path, "main.py")):
@@ -279,8 +294,11 @@ if __name__ == '__main__':
         print("adding joystick " + my_joystick.get_name())
         all_joysticks.append(my_joystick)
 
+    print(games[1].name)
+
     while True:
         # draw
+        clock.tick()
         screen.fill(background_color)
         height_anzeige_auswahl = height/20
         max_y_scroll = height
