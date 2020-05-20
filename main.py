@@ -11,8 +11,9 @@ height = 750
 background_color = (70, 70, 70)  # background color
 font = pygame.font.match_font("arial") # choose font
 scroll = [5,4]  # change between [5,4] and [4,5] to switch srolling direction
-LIST_VIEW = "list view"
-SIDE_VIEW = "side view"
+LIST_VIEW = 0
+SIDE_VIEW = 1
+BRICK_VIEW = 2
 ansicht = SIDE_VIEW
 
 text_groessen = [30,20,15]
@@ -253,19 +254,18 @@ def draw_side_view(screen,width,height,height_anzeige_auswahl,games,selected_gam
             image_width = int(image_height * 1.5)
             image_x = width/2-image_width/2+[-width/2.5,-width/3.2,-width/5.7,0,width/5.7,width/3.2,width/2.5][(game_num-selected_game+3)]
             image_y = height*2/10-image_height/2+10+height_anzeige_auswahl
-            color = [255, 230, 200, 170][abs(game_num - selected_game)]/2.25
+            color = [110, 100, 90, 80][abs(game_num - selected_game)]
             rect = pygame.Rect(image_x, image_y, image_width, image_height)
             buttons_for_mouse_klick[game_num] = rect
             if game.title_image != None:
                 title_image = pygame.transform.scale(game.title_image, (image_width,image_height))
                 screen.blit(title_image,(image_x,image_y))
             else:
-                try:
-                    surface = screen.subsurface(rect)
-                    surface.fill((color, color, color))
-                    draw_text(surface,game.name,image_width/2,image_height/2, text_groessen[0]*[1,0.88,0.7,0.6][abs(game_num-selected_game)],rect_place="mitte")
-                except ValueError:
-                    pass
+                surface = pygame.Surface((rect.width,rect.height))
+                surface.fill((color, color, color))
+                draw_text(surface,game.name,image_width/2,image_height/2, text_groessen[0]*[1,0.88,0.7,0.6][abs(game_num-selected_game)],rect_place="mitte")
+                screen.blit(surface,(rect.x,rect.y))
+
     # linie
     pygame.draw.line(screen,(200,200,200),(0,height*(2/5)+height/30+height_anzeige_auswahl),(width,height*(2/5)+height/30+height_anzeige_auswahl),2)
     # info
@@ -311,11 +311,62 @@ def draw_list_view(screen,width,height,height_anzeige_auswahl,games,selected_gam
     y = draw_game_info_on_surface(surface, games[selected_game], y_scroll)
     start_button = draw_start_button(screen,games[selected_game])
     return y,buttons_for_mouse_klick,start_button
+def draw_brick_view(screen,width,height,height_anzeige_auswahl,games,selected_game,y_scroll):
+    buttons_for_mouse_klick = {}
+    # brick view
+    # werte bestimmen
+    textes = {}
+    width_info = 0
+    small_font = pygame.font.Font(font, int(text_groessen[1]))
+    big_font = pygame.font.Font(font, int(text_groessen[1]))
+    for game in games:
+        textes[game] = ["Entwickler: " + game.author,"Typ: " + game.type,"Spieler: " + game.players.replace("to", "bis"),"Spielen mit: " + ", ".join(game.playable_with)]
+        for text in textes[game]:
+            text_surface = small_font.render(text, True, (0,0,0))
+            text_rect = text_surface.get_rect()
+            if text_rect.width+20 > width_info:
+                width_info = text_rect.width+20
+        text_surface = big_font.render(game.name, True, (0, 0, 0))
+        text_rect = text_surface.get_rect()
+        if text_rect.width + 20 > width_info:
+            width_info = text_rect.width + 20
+    image_width = int((width - width_info) - height / 30)
+    height_info = int(image_width/1.5)
+    # zeichnen
+    for count,game in enumerate(games):
+        info_surface = pygame.Surface((width_info,height_info))
+        info_surface.fill((100,100,100))
+        y = 10
+        y += draw_text(info_surface, game.name, 10, y,size=text_groessen[0], rect_place="oben_links").height + text_groessen[0] / 2
+        for text in textes[game]:
+            y += draw_text(info_surface,text,10,y,size=text_groessen[1],rect_place="oben_links").height+text_groessen[1]/4
+        draw_text_fitting_line_width(info_surface,game.description,width_info,10,y,size=text_groessen[1])
+        if game.title_image != None:
+            title_image = pygame.transform.scale(game.title_image, (image_width, height_info))
+        else:
+            title_image = pygame.Surface((image_width, height_info))
+            title_image.fill((110,110,110))
+            draw_text(title_image, game.name, image_width / 2, height_info / 2, text_groessen[0], rect_place="mitte")
+        rect_pos_y = y_scroll + 10 + height_anzeige_auswahl + (height_info + height / 30) * count
+        if count % 2 == 0:
+            screen.blit(info_surface, (width-width_info, rect_pos_y))
+            screen.blit(title_image, (0, rect_pos_y))
+        else:
+            screen.blit(info_surface, (0, rect_pos_y))
+            screen.blit(title_image, (width-image_width, rect_pos_y))
+        if height/2 < rect_pos_y + height and height/2 > rect_pos_y:
+            selected_game = count
+    # scroll
+    max_y_scroll = (height_info + height / 30) * (len(games)) - height + height_anzeige_auswahl + 10 + height_info/2
+    # startbutton
+    start_button = draw_start_button(screen,games[selected_game])
+    return max_y_scroll,selected_game,start_button
 
 def draw_anzeige_auswahl(surf,width,height):
     pygame.draw.line(surf,(230,100,100),(0,height),(width,height))
-    draw_text(surf, "Listenansicht",width*(1/4),height/2,size=min([height*(5/8),text_groessen[0]]),color=(230,100,100),rect_place="mitte")
-    draw_text(surf, "Seitenansicht",width*(3/4),height/2,size=min([height*(5/8),text_groessen[0]]),color=(230,100,100),rect_place="mitte")
+    draw_text(surf, "Listenansicht",width*(1/6),height/2,size=min([height*(5/8),text_groessen[0]]),color=(230,100,100),rect_place="mitte")
+    draw_text(surf, "Seitenansicht",width*(3/6),height/2,size=min([height*(5/8),text_groessen[0]]),color=(230,100,100),rect_place="mitte")
+    draw_text(surf, "Brickansicht", width*(5/6),height/2,size=min([height*(5/8),text_groessen[0]]),color=(230,100,100),rect_place="mitte")
 
 if __name__ == '__main__':
     games = find_games(game_folder_path)
@@ -346,6 +397,9 @@ if __name__ == '__main__':
             max_y_scroll,mouse_buttons,start_button = draw_side_view(screen,width,height,height_anzeige_auswahl,games,selected_game,y_scroll)
         elif ansicht == LIST_VIEW:
             max_y_scroll,mouse_buttons,start_button = draw_list_view(screen,width,height,height_anzeige_auswahl,games,selected_game,y_scroll)
+        elif ansicht == BRICK_VIEW:
+            mouse_buttons = {}
+            max_y_scroll,selected_game,start_button = draw_brick_view(screen,width,height,height_anzeige_auswahl,games,selected_game,y_scroll)
         draw_anzeige_auswahl(screen,width,height_anzeige_auswahl)
         pygame.display.flip()
 
@@ -370,10 +424,13 @@ if __name__ == '__main__':
                 if event.button == 1:
                     pos = pygame.mouse.get_pos()
                     if pos[1] <= height_anzeige_auswahl:
-                        if pos[0] <= width/2:
+                        y_scroll = 0
+                        if pos[0] <= width*1/3:
                             ansicht = LIST_VIEW
-                        else:
+                        elif pos[0] <= width*2/3:
                             ansicht = SIDE_VIEW
+                        elif pos[0] <= width*3/3:
+                            ansicht = BRICK_VIEW
                     else:
                         for button in mouse_buttons:
                             if mouse_buttons[button].collidepoint(pos):
@@ -421,9 +478,11 @@ if __name__ == '__main__':
                 if selected_game >= len(games): selected_game = len(games) - 1
             # ansicht wählen
             if joystick.get_shoulder_left():
-                ansicht = LIST_VIEW
+                ansicht -= 1
+                if ansicht < 0: ansicht = 0
             if joystick.get_shoulder_right():
-                ansicht = SIDE_VIEW
+                ansicht += 1
+                if ansicht > 2: ansicht = 2
             # scrollen
             if joystick.get_axis_up():
                 y_scroll -= 50
