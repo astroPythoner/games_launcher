@@ -2,8 +2,6 @@ import sys
 import os
 import json
 import pygame
-import pytmx
-import pytweening
 from joystickpins import joystickpins
 
 width = 1000 # opening screen size
