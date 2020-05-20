@@ -41,3 +41,8 @@ In dem Ordner EXAMPLE_GAME liegt das Spiel. Es entält:
 Die Spiele können auch zwei meiner Projekte verwenden: 
 - Mein [joystickpins projekt](https://github.com/astroPythoner/joystickpins) Projekt für eine einfache Verwendung von Kontrollern und Tastaturen im Spiel.
 - Mein [moving background](https://github.com/astroPythoner/pygame_background_animation) Projekt um schnell und einfach animierte Hintrgünde in Spielen zu erstellen.
+
+# Beispielaussehen
+![](https://raw.githubusercontent.com/astroPythoner/games_launcher/master/example_list_view.png)
+![](https://raw.githubusercontent.com/astroPythoner/games_launcher/master/example_side_view.png)
+![](https://raw.githubusercontent.com/astroPythoner/games_launcher/master/example_brick_view.png)
