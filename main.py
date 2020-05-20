@@ -2,7 +2,12 @@ import sys
 import os
 import json
 import pygame
-from joystickpins import joystickpins
+joystick_enabled = True
+try:
+    from joystickpins import joystickpins
+except Exception:
+    joystick_enabled = False
+    pass
 
 width = 1000 # opening screen size
 height = 750
@@ -17,6 +22,7 @@ ansicht = SIDE_VIEW
 text_groessen = [30,20,15]
 game_folder_path = os.path.dirname(os.path.realpath(__file__))
 
+# Datenklassen
 class Game:
     name = "Unnamed"
     start_button_text = name+" starten (A)"
@@ -112,6 +118,7 @@ class Background_Game(Game):
         if os.path.isfile(os.path.join(self.folder, "screenshot1.png")):
             self.title_image = pygame.image.load(os.path.join(self.folder, "screenshot1.png"))
 
+# Methoden für Texte, Bilder, Informationen, ... zeichnen
 def calculate_fit_size(width,height,max_width_faktor, max_height_faktor):
     # caltulate size so it fits to WIDTH and HEIGHT
     size = max_width_faktor * width
@@ -218,29 +225,7 @@ def draw_start_button(surface,game):
     draw_text(start_button_surf, game.start_button_text, start_button_surf.get_width() / 2,start_button_surf.get_height() / 2, size, color=(40, 40, 40), rect_place="mitte")
     return text_rect
 
-def find_games(game_folder_path):
-    games = []
-    for folder in os.listdir(game_folder_path):
-        game_path = os.path.join(game_folder_path, folder)
-        if os.path.isfile(os.path.join(game_path, "main.py")):
-            games.append(Game(game_path))
-    games.append(Information_Game())
-    games.append(Background_Game())
-    return games
-def start_game(game_path):
-    if game_path == os.path.join(game_folder_path,"joystickpins"):
-        if os.path.isfile(os.path.join(game_path, "event_test.py")):
-            print("joysticktesten:", "from " + os.path.basename(game_path) + " import event_test")
-            exec("from " + os.path.basename(game_path) + " import event_test")
-    if game_path == os.path.join(game_folder_path,"moving_background"):
-        if os.path.isfile(os.path.join(game_path, "sample.py")):
-            print("Hintergrundbeispiel:", "from " + os.path.basename(game_path) + " import sample")
-            exec("from " + os.path.basename(game_path) + " import sample")
-    elif os.path.isfile(os.path.join(game_path, "main.py")):
-        sys.path.insert(1, game_path)
-        print("running:","from " + os.path.basename(game_path) + " import main")
-        exec("from " + os.path.basename(game_path) + " import main")
-
+# Bildschirme zeichnen je nach Einstellung
 def draw_side_view(screen,width,height,height_anzeige_auswahl,games,selected_game, y_scroll):
     buttons_for_mouse_klick = {}
     # side view
@@ -359,46 +344,90 @@ def draw_brick_view(screen,width,height,height_anzeige_auswahl,games,selected_ga
     # startbutton
     start_button = draw_start_button(screen,games[selected_game])
     return max_y_scroll,selected_game,start_button
+def draw_no_games_found(screen,width,height):
+    screen.fill((230,100,100))
+    draw_text(screen,"Keine Spiele gefunden",width/2,height*(1/4),text_groessen[0]*2,color=(150,0,0),rect_place="mitte")
+    draw_text(screen,"Ein Spiel wird dann erkannt, wenn es im gleichen Ordner wie",width/2,height*(1/2),text_groessen[1]*1.3,color=(50,0,0),rect_place="unten_mitte").height + text_groessen[1]/2
+    draw_text(screen,"main.py liegt und selber auch eine main.py besitzt.",width/2,height*(1/2),text_groessen[1]*1.3,color=(50,0,0),rect_place="oben_mitte").height + text_groessen[0]
+    draw_text(screen,"Lade dir Spiele kostenlos von meinem GitHub Account herunter:",width/2,height*(3/4),text_groessen[1],color=(50,0,0),rect_place="unten_mitte")
+    link1 = draw_text(screen,"https://github.com/astroPythoner",width/2,height*(3/4),text_groessen[1],color=(50,0,150),rect_place="oben_mitte")
+    draw_text(screen,"Mehr darüber, wie du selber Spiele erstellen kannst hier:",width/2,height*(7/8),text_groessen[1],color=(50,0,0),rect_place="unten_mitte")
+    link2 = draw_text(screen,"https://github.com/astroPythoner/games_launcher/blob/master/README.md",width/2,height*(7/8),text_groessen[1],color=(50,0,150),rect_place="oben_mitte")
+    return link1,link2
 
+# Auswahl mit Anzeige oben ziechnen
 def draw_anzeige_auswahl(surf,width,height):
     pygame.draw.line(surf,(230,100,100),(0,height),(width,height))
     draw_text(surf, "Listenansicht",width*(1/6),height/2,size=min([height*(5/8),text_groessen[0]]),color=(230,100,100),rect_place="mitte")
     draw_text(surf, "Seitenansicht",width*(3/6),height/2,size=min([height*(5/8),text_groessen[0]]),color=(230,100,100),rect_place="mitte")
     draw_text(surf, "Brickansicht", width*(5/6),height/2,size=min([height*(5/8),text_groessen[0]]),color=(230,100,100),rect_place="mitte")
 
+# Spiele finden/starten
+def find_games(game_folder_path):
+    games = []
+    for folder in os.listdir(game_folder_path):
+        game_path = os.path.join(game_folder_path, folder)
+        if os.path.isfile(os.path.join(game_path, "main.py")):
+            games.append(Game(game_path))
+    if not len(games) == 0:
+        games.append(Information_Game())
+        games.append(Background_Game())
+    return games
+def start_game(game_path):
+    if game_path == os.path.join(game_folder_path,"joystickpins"):
+        if os.path.isfile(os.path.join(game_path, "event_test.py")):
+            print("joysticktesten:", "from " + os.path.basename(game_path) + " import event_test")
+            exec("from " + os.path.basename(game_path) + " import event_test")
+    if game_path == os.path.join(game_folder_path,"moving_background"):
+        if os.path.isfile(os.path.join(game_path, "sample.py")):
+            print("Hintergrundbeispiel:", "from " + os.path.basename(game_path) + " import sample")
+            exec("from " + os.path.basename(game_path) + " import sample")
+    elif os.path.isfile(os.path.join(game_path, "main.py")):
+        sys.path.insert(1, game_path)
+        print("running:","from " + os.path.basename(game_path) + " import main")
+        exec("from " + os.path.basename(game_path) + " import main")
+
+# Programm start
 if __name__ == '__main__':
+    # Spiele suchen
     games = find_games(game_folder_path)
 
+    # Werte setzten
     selected_game = 0
     y_scroll = 0
 
+    # Pygame starten
     pygame.init()
     screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
-    pygame.display.set_caption("Games with python and pygame")
+    pygame.display.set_caption("Games with python and pygame v.1.0")
     screen.fill((60,60,60))
 
-    all_joysticks = []
-    for joy in range(pygame.joystick.get_count()):
-        pygame_joystick = pygame.joystick.Joystick(joy)
-        pygame_joystick.init()
-        my_joystick = joystickpins.JoystickPins(pygame_joystick)
-        print("adding joystick " + my_joystick.get_name())
-        all_joysticks.append(my_joystick)
+    # Controller verbinden
+    if joystick_enabled:
+        all_joysticks = []
+        for joy in range(pygame.joystick.get_count()):
+            pygame_joystick = pygame.joystick.Joystick(joy)
+            pygame_joystick.init()
+            my_joystick = joystickpins.JoystickPins(pygame_joystick)
+            print("adding joystick " + my_joystick.get_name())
+            all_joysticks.append(my_joystick)
 
     while pygame.get_init():
-        # draw
-        screen.fill(background_color)
-        height_anzeige_auswahl = height/20
+        # werte setzen
+        height_anzeige_auswahl = height / 20
         max_y_scroll = height
         mouse_buttons = {}
-        if ansicht == SIDE_VIEW:
+        # zeichnen
+        screen.fill(background_color)
+        if len(games) == 0:
+            link1,link2 = draw_no_games_found(screen,width,height)
+        elif ansicht == SIDE_VIEW:
             max_y_scroll,mouse_buttons,start_button = draw_side_view(screen,width,height,height_anzeige_auswahl,games,selected_game,y_scroll)
         elif ansicht == LIST_VIEW:
             max_y_scroll,mouse_buttons,start_button = draw_list_view(screen,width,height,height_anzeige_auswahl,games,selected_game,y_scroll)
         elif ansicht == BRICK_VIEW:
-            mouse_buttons = {}
             max_y_scroll,selected_game,start_button = draw_brick_view(screen,width,height,height_anzeige_auswahl,games,selected_game,y_scroll)
-        draw_anzeige_auswahl(screen,width,height_anzeige_auswahl)
+        if len(games) != 0: draw_anzeige_auswahl(screen,width,height_anzeige_auswahl)
         pygame.display.flip()
 
         # events
@@ -421,24 +450,38 @@ if __name__ == '__main__':
                 # klicken
                 if event.button == 1:
                     pos = pygame.mouse.get_pos()
-                    if pos[1] <= height_anzeige_auswahl:
-                        y_scroll = 0
-                        if pos[0] <= width*1/3:
-                            ansicht = LIST_VIEW
-                        elif pos[0] <= width*2/3:
-                            ansicht = SIDE_VIEW
-                        elif pos[0] <= width*3/3:
-                            ansicht = BRICK_VIEW
+                    if len(games) == 0:
+                        if link1.collidepoint(pos):
+                            try:
+                                import webbrowser
+                                webbrowser.open("https://github.com/astroPythoner")
+                            except Exception:
+                                print("Website could not be opened")
+                        elif link2.collidepoint(pos):
+                            try:
+                                import webbrowser
+                                webbrowser.open("https://github.com/astroPythoner/games_launcher/blob/master/README.md")
+                            except Exception:
+                                print("Website could not be opened")
                     else:
-                        for button in mouse_buttons:
-                            if mouse_buttons[button].collidepoint(pos):
-                                selected_game = button
-                            elif start_button.collidepoint(pos):
-                                pygame.quit()
-                                pygame.display.quit()
-                                pygame.joystick.quit()
-                                print("starting", games[selected_game].name)
-                                start_game(games[selected_game].folder)
+                        if pos[1] <= height_anzeige_auswahl:
+                            y_scroll = 0
+                            if pos[0] <= width*1/3:
+                                ansicht = LIST_VIEW
+                            elif pos[0] <= width*2/3:
+                                ansicht = SIDE_VIEW
+                            elif pos[0] <= width*3/3:
+                                ansicht = BRICK_VIEW
+                        else:
+                            for button in mouse_buttons:
+                                if mouse_buttons[button].collidepoint(pos):
+                                    selected_game = button
+                                elif start_button.collidepoint(pos):
+                                    pygame.quit()
+                                    pygame.display.quit()
+                                    pygame.joystick.quit()
+                                    print("starting", games[selected_game].name)
+                                    start_game(games[selected_game].folder)
                 # scrollen
                 elif event.button == scroll[0]:
                     y_scroll -= 50
@@ -461,37 +504,38 @@ if __name__ == '__main__':
                 if height < 150: height=150
                 update_text_sizes(width,height)
                 screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
-        for joystick in all_joysticks:
-            # schließen
-            if joystick.get_start() and joystick.get_select():
-                quit()
-            # auswählen
-            if joystick.get_axis_left():
-                y_scroll = 0
-                selected_game -= 1
-                if selected_game < 0: selected_game = 0
-            if joystick.get_axis_right():
-                y_scroll = 0
-                selected_game += 1
-                if selected_game >= len(games): selected_game = len(games) - 1
-            # ansicht wählen
-            if joystick.get_shoulder_left():
-                ansicht -= 1
-                if ansicht < 0: ansicht = 0
-            if joystick.get_shoulder_right():
-                ansicht += 1
-                if ansicht > 2: ansicht = 2
-            # scrollen
-            if joystick.get_axis_up():
-                y_scroll -= 50
-                if y_scroll < -max_y_scroll: y_scroll = -max_y_scroll
-            if joystick.get_axis_down():
-                y_scroll += 50
-                if y_scroll > 0: y_scroll = 0
-            # starten
-            if joystick.get_B() or joystick.get_A():
-                pygame.quit()
-                pygame.display.quit()
-                pygame.joystick.quit()
-                print("starting", games[selected_game].name)
-                start_game(games[selected_game].folder)
+        if joystick_enabled:
+            for joystick in all_joysticks:
+                # schließen
+                if joystick.get_start() and joystick.get_select():
+                    quit()
+                # auswählen
+                if joystick.get_axis_left():
+                    y_scroll = 0
+                    selected_game -= 1
+                    if selected_game < 0: selected_game = 0
+                if joystick.get_axis_right():
+                    y_scroll = 0
+                    selected_game += 1
+                    if selected_game >= len(games): selected_game = len(games) - 1
+                # ansicht wählen
+                if joystick.get_shoulder_left():
+                    ansicht -= 1
+                    if ansicht < 0: ansicht = 0
+                if joystick.get_shoulder_right():
+                    ansicht += 1
+                    if ansicht > 2: ansicht = 2
+                # scrollen
+                if joystick.get_axis_up():
+                    y_scroll -= 50
+                    if y_scroll < -max_y_scroll: y_scroll = -max_y_scroll
+                if joystick.get_axis_down():
+                    y_scroll += 50
+                    if y_scroll > 0: y_scroll = 0
+                # starten
+                if joystick.get_B() or joystick.get_A():
+                    pygame.quit()
+                    pygame.display.quit()
+                    pygame.joystick.quit()
+                    print("starting", games[selected_game].name)
+                    start_game(games[selected_game].folder)
