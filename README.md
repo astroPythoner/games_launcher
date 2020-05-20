@@ -42,6 +42,10 @@ Die Spiele können auch zwei meiner Projekte verwenden:
 - Mein [joystickpins projekt](https://github.com/astroPythoner/joystickpins) Projekt für eine einfache Verwendung von Kontrollern und Tastaturen im Spiel.
 - Mein [moving background](https://github.com/astroPythoner/pygame_background_animation) Projekt um schnell und einfach animierte Hintrgünde in Spielen zu erstellen.
 
+Wenn du bisher noch nie pygame verwendet hast ist dieser Videokurs sehr hilfreich https://www.youtube.com/watch?v=VO8rTszcW4s&list=PLsk-HSGFjnaH5yghzu7PcOzm9NhsW0Urw
+
+Eine Dokumentation über pygame findest du hier https://www.pygame.org/docs/
+
 # Beispielaussehen
 ![](https://raw.githubusercontent.com/astroPythoner/games_launcher/master/example_list_view.png)
 ![](https://raw.githubusercontent.com/astroPythoner/games_launcher/master/example_side_view.png)
