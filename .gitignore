@@ -1,8 +1,11 @@
 Advanced_Shmup/*
+Shmup/*
 Flappy_Plane/*
 Lehrer_vs_Zombies/*
 Pong/*
+pygame_Pong/*
 Tetris/*
 Tic_Tac_Toe_and_More/*
 .idea/*
 test.py
+__pycache__/*

@@ -2,6 +2,8 @@ import sys
 import os
 import json
 import pygame
+import subprocess
+import time
 joystick_enabled = True
 try:
     from joystickpins import joystickpins
@@ -376,16 +378,12 @@ def find_games(game_folder_path):
 def start_game(game_path):
     if game_path == os.path.join(game_folder_path,"joystickpins"):
         if os.path.isfile(os.path.join(game_path, "event_test.py")):
-            print("joysticktesten:", "from " + os.path.basename(game_path) + " import event_test")
-            exec("from " + os.path.basename(game_path) + " import event_test")
+            subprocess.run(["python", "event_test.py"], cwd=game_path)
     if game_path == os.path.join(game_folder_path,"moving_background"):
         if os.path.isfile(os.path.join(game_path, "sample.py")):
-            print("Hintergrundbeispiel:", "from " + os.path.basename(game_path) + " import sample")
-            exec("from " + os.path.basename(game_path) + " import sample")
+            subprocess.run(["python", "sample.py"], cwd=game_path)
     elif os.path.isfile(os.path.join(game_path, "main.py")):
-        sys.path.insert(1, game_path)
-        print("running:","from " + os.path.basename(game_path) + " import main")
-        exec("from " + os.path.basename(game_path) + " import main")
+        subprocess.run(["python","main.py"],cwd=game_path)
 
 # Programm start
 if __name__ == '__main__':
@@ -476,12 +474,9 @@ if __name__ == '__main__':
                             for button in mouse_buttons:
                                 if mouse_buttons[button].collidepoint(pos):
                                     selected_game = button
-                                elif start_button.collidepoint(pos):
-                                    pygame.quit()
-                                    pygame.display.quit()
-                                    pygame.joystick.quit()
-                                    print("starting", games[selected_game].name)
-                                    start_game(games[selected_game].folder)
+                            if start_button.collidepoint(pos):
+                                print("starting", games[selected_game].name)
+                                start_game(games[selected_game].folder)
                 # scrollen
                 elif event.button == scroll[0]:
                     y_scroll -= 50
@@ -491,9 +486,6 @@ if __name__ == '__main__':
                     if y_scroll > 0: y_scroll = 0
             # starten
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                pygame.quit()
-                pygame.display.quit()
-                pygame.joystick.quit()
                 print("starting",games[selected_game].name)
                 start_game(games[selected_game].folder)
             # window resize
@@ -534,8 +526,5 @@ if __name__ == '__main__':
                     if y_scroll > 0: y_scroll = 0
                 # starten
                 if joystick.get_B() or joystick.get_A():
-                    pygame.quit()
-                    pygame.display.quit()
-                    pygame.joystick.quit()
                     print("starting", games[selected_game].name)
                     start_game(games[selected_game].folder)
