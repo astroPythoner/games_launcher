@@ -41,7 +41,7 @@ class Game:
         if game_path != None:
             self.folder = game_path
             if os.path.isfile(os.path.join(game_path, "info.json")):
-                with open(os.path.join(game_path, "info.json")) as f:
+                with open(os.path.join(game_path, "info.json"), encoding="utf-8") as f:
                     data = json.load(f)
                     if "name" in data: self.name = data["name"]
                     self.start_button_text = self.name+" starten (A)"
@@ -57,7 +57,7 @@ class Game:
     def _read_readme(self,path):
         if os.path.isfile(path):
             self.readme = {}
-            with open(path, "r") as file:
+            with open(path, encoding="utf-8") as file:
                 for line in file:
                     line = line.rstrip()
                     ueberschrift_num = 0
@@ -215,7 +215,7 @@ def draw_game_info_on_surface(surface,game,y_scroll):
     y += 10 + text_groessen[1]
     # Readme
     y = draw_text_fitting_line_width(surface, "Readme:",                                        surface.get_width() - 20, 10, y, text_groessen[0], color=(250, 250, 250)) + text_groessen[0] / 2
-    y = draw_readme(surface, game.readme, surface.get_width() - 20, 10, y, color1=(250, 225, 225), color2=(225, 200, 200), color3=(200, 175, 175), normal_color=(150, 150, 150), line_color=(200, 200, 200))
+    y = draw_readme(surface, game.readme, surface.get_width() - 20, 10, y, color1=(250, 150, 150), color2=(225, 130, 130), color3=(200, 90, 90), normal_color=(150, 150, 150), line_color=(200, 200, 200))
 
     return y - y_scroll - surface.get_height() + text_groessen[0]
 def draw_start_button(surface,game):
