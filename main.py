@@ -115,8 +115,8 @@ class Background_Game(Game):
         self.author = "AstroPythoner"
         self.players = "keine Spieler nötig"
         self.playable_with = ["keine Controller nötig"]
-        self._read_readme(os.path.join("moving_background","README.md"))
-        self.folder = os.path.join(game_folder_path, "moving_background")
+        self._read_readme(os.path.join("pygame_background_animation","README.md"))
+        self.folder = os.path.join(game_folder_path, "pygame_background_animation")
         if os.path.isfile(os.path.join(self.folder, "screenshot1.png")):
             self.title_image = pygame.image.load(os.path.join(self.folder, "screenshot1.png"))
 
