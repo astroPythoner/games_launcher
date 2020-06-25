@@ -78,7 +78,7 @@ class Game:
                         ueberschrift_num = 2
                     elif line.startswith("##"):
                         line = line[2:]
-                        ueberschrift_num = 2
+                        ueberschrift_num =2
                     if line.startswith("# "):
                         line = line[2:]
                         ueberschrift_num = 1
@@ -379,7 +379,7 @@ def start_game(game_path):
     if game_path == os.path.join(game_folder_path,"joystickpins"):
         if os.path.isfile(os.path.join(game_path, "event_test.py")):
             subprocess.run(["python", "event_test.py"], cwd=game_path)
-    if game_path == os.path.join(game_folder_path,"moving_background"):
+    if game_path == os.path.join(game_folder_path,"pygame_background_animation"):
         if os.path.isfile(os.path.join(game_path, "sample.py")):
             subprocess.run(["python", "sample.py"], cwd=game_path)
     elif os.path.isfile(os.path.join(game_path, "main.py")):
